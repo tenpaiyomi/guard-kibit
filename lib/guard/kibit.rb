@@ -16,7 +16,8 @@ module Guard
 
       @options = {
         all_on_start: true,
-        notification: :failed
+        notification: :failed,
+        default_paths: []
       }.merge(options)
     end
 
@@ -25,7 +26,7 @@ module Guard
     end
 
     def run_all
-      UI.info 'Inspecting Clojure code style of all files'
+      Compat::UI.info 'Inspecting Clojure code style of all files'
       inspect_with_kibit
     end
 
@@ -40,32 +41,29 @@ module Guard
     private
 
     def run_partially(paths)
-      puts '!!!!!!!!!!!'
-      puts paths.inspect
-      puts '!!!!!!!!!!!'
       paths = clean_paths(paths)
 
       return if paths.empty?
 
       displayed_paths = paths.map { |path| smart_path(path) }
-      UI.info "Inspecting Clojure code style: #{displayed_paths.join(' ')}"
+      Compat::UI.info "Inspecting Clojure code style: #{displayed_paths.join(' ')}"
 
       inspect_with_kibit(paths)
     end
 
     def inspect_with_kibit(paths = [])
+      paths = @options[:default_paths] if paths.empty?
+      Compat::UI.info "No paths specified to inspect, skipping Kibit" && return if paths.empty?
+
       runner = Runner.new(@options)
       passed = runner.run(paths)
       throw :task_has_failed unless passed
     rescue StandardError => e
-      UI.error 'The following exception occurred while running guard-kibit: ' \
+      Compat::UI.error 'The following exception occurred while running guard-kibit: ' \
                "#{e.backtrace.first} #{e.message} (#{e.class.name})"
     end
 
     def clean_paths(paths)
-      puts '~~~~~'
-      puts paths.inspect
-      puts '~~~~~'
       paths = paths.dup
       paths.map! { |path| File.expand_path(path) }
       paths.uniq!
