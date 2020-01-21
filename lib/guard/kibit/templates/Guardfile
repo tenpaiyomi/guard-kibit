@@ -1,0 +1,5 @@
+# frozen_string_literal: true
+
+guard :kibit do
+  watch(%r{^app/assets/cljs/(.+)\.cljs$})
+end
